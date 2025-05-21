@@ -1,0 +1,117 @@
+using Unity.Netcode;
+using Unity.Netcode.Transports.UTP;
+using UnityEngine;
+
+public class GameManager : MonoBehaviour
+{
+    public enum NodeType
+    {
+        NULL =0, 
+        HOST, 
+        CLIENT, 
+        SERVER 
+    }
+
+    //프로퍼티
+    public NodeType UserNodeType { get; set; }
+    public string UserID { get; set; }
+
+
+    private static GameManager _instance = null;
+    public static GameManager Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                Debug.LogWarning("GameManager is null.");
+            }
+            return _instance;
+        }
+    }
+
+    private void Awake()
+    {
+        if (_instance == null)
+        {
+            _instance = this;
+        }
+        else if (_instance != this)
+        {
+            Debug.LogWarning("GameManager has another instance.");
+            Destroy(gameObject);
+        }
+        DontDestroyOnLoad(gameObject);
+    }
+    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    void Start()
+    {
+        initParam();
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        
+    }
+
+    void initParam()
+    {
+        UserNodeType = NodeType.NULL;
+    }
+
+    public int getNumClients()
+    {
+        if (NetworkManager.Singleton == null) return 0;
+        System.Collections.Generic.IReadOnlyList<NetworkClient> connectedClients = NetworkManager.Singleton.ConnectedClientsList;
+
+        return connectedClients.Count;
+    }
+
+    public void setConnection(string ipAddress, ushort portNum)
+    {
+        NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(ipAddress, portNum);
+    }
+
+    public void startHost()
+    {
+        if (!NetworkManager.Singleton.IsServer && !NetworkManager.Singleton.IsClient)
+        {
+            Debug.Log("Host started.");
+            NetworkManager.Singleton.StartHost();
+        }
+    }
+
+    public void startServer()
+    {
+        if (!NetworkManager.Singleton.IsServer && !NetworkManager.Singleton.IsClient)
+        {
+            Debug.Log("Server started.");
+            NetworkManager.Singleton.StartServer();
+        }
+    }
+
+    public void startClient()
+    {
+        if (!NetworkManager.Singleton.IsServer && !NetworkManager.Singleton.IsClient)
+        {
+            Debug.Log("Client started.");
+            NetworkManager.Singleton.StartClient();
+        }
+    }
+
+    public void startNode()
+    {
+        if(UserNodeType == NodeType.HOST)
+            startHost();
+        else if(UserNodeType == NodeType.CLIENT)
+            startClient();
+        else if(UserNodeType == NodeType.SERVER)
+            startServer();
+        else
+        {
+            Debug.Log("Unknown node type.");
+        }
+    }
+
+}
